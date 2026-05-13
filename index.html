@@ -2,485 +2,237 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тест: Клиповое мышление у подростков</title>
-    <!-- Подключаем jsPsych и необходимые плагины -->
-    <script src="https://unpkg.com/jspsych@7.3.4/dist/index.bundle.min.js"></script>
-    <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css">
+    <script src="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/dist/index.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/css/jspsych.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-        }
-        .jspsych-content {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .question-text {
-            font-weight: 500;
-            margin-bottom: 1rem;
-        }
-        .likert-row, .nrs-row {
-            margin: 1rem 0;
-        }
-        .jspsych-survey-likert-statement {
-            margin-bottom: 1rem;
-        }
-        .jspsych-survey-likert-options {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-        button {
-            background-color: #4a6fa5;
-            border: none;
-            color: white;
-            padding: 12px 24px;
-            font-size: 1rem;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background-color: #2c4c7a;
-        }
-        .footer-note {
-            font-size: 0.8rem;
-            text-align: center;
-            margin-top: 2rem;
-            color: #6c757d;
-        }
-        h2 {
-            color: #1e3c5c;
-            border-left: 5px solid #4a6fa5;
-            padding-left: 1rem;
-            margin-top: 1.5rem;
-        }
-        .alert {
-            background: #fff3cd;
-            border-left: 5px solid #ffc107;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 8px;
-        }
-        .result-section {
-            margin: 1rem 0;
-            padding: 1rem;
-            background: #e9ecef;
-            border-radius: 12px;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .jspsych-content { max-width: 900px; margin: 0 auto; background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        button { background-color: #4a6fa5; border: none; color: white; padding: 12px 24px; font-size: 1rem; border-radius: 40px; cursor: pointer; }
+        button:hover { background-color: #2c4c7a; }
+        .result-section { margin: 1rem 0; padding: 1rem; background: #e9ecef; border-radius: 12px; }
+        .alert { background: #fff3cd; border-left: 5px solid #ffc107; padding: 1rem; margin: 1rem 0; border-radius: 8px; }
     </style>
 </head>
 <body>
 <div id="jspsych-target"></div>
-
 <script>
-    // ------------------------------- ДАННЫЕ ДЛЯ БЛОКОВ ----------------------------------
-
-    // Блок А1: Likert 1-5 (12 утверждений)
+    // ---- Вопросы для блоков ----
     const likertQuestions = [
         "Когда я читаю длинный текст (больше двух страниц), мне трудно сосредоточиться, я быстро отвлекаюсь.",
         "Я предпочитаю короткие видео (до 1 минуты) вместо фильмов или лекций.",
         "Мне легко переключаться между несколькими делами одновременно (например, слушать музыку, делать уроки и переписываться в чате).",
         "Я часто теряю нить разговора или смысла сообщения, потому что мысли перескакивают с одного на другое.",
         "Чтобы запомнить информацию, мне нужны яркие картинки, а не текст.",
-        "Мне трудно развёрнуто ответить на вопрос — я предпочитаю отвечать «да», «нет» или одним словом.",
+        "Мне трудно развёрнуто ответить на вопрос — я предпочитаю отвечать \"да\", \"нет\" или одним словом.",
         "Я воспринимаю информацию отдельными кусками, не пытаясь соединить их в общую картину.",
         "Когда я узнаю новость, меня обычно не волнует, что было до этого или что будет после — главное, что происходит сейчас.",
-        "Для меня не важно, *почему* что‑то произошло — достаточно знать, *что* произошло.",
-        "Когда я читаю текст или слушаю объяснение, я легко удерживаю в голове главную мысль и вижу, как детали к ней относятся. (обратный вопрос)",
+        "Для меня не важно, *почему* что-то произошло — достаточно знать, *что* произошло.",
+        "Когда я читаю текст или слушаю объяснение, я легко удерживаю в голове главную мысль и вижу, как детали к ней относятся.",
         "Я могу посмотреть одно короткое видео на тему и считать, что я в ней разобрался, не проверяя другие источники.",
         "Мне трудно объяснить процесс или событие от начала до конца — я помню только отдельные моменты."
     ];
-    const likertLabels = ["1 - совсем не похоже", "2 - скорее не похоже", "3 - иногда похоже", "4 - часто похоже", "5 - почт
+    const likertLabels = ["1 - совсем не похоже", "2 - скорее не похоже", "3 - иногда похоже", "4 - часто похоже", "5 - почти всегда похоже"];
 
-
-и всегда похоже"];
-
-    // Блок А2: NRS 0-10 (5 вопросов)
     const nrsQuestions = [
-        "Насколько сильно тебя привлекает бесконечная лента коротких роликов (TikTok, Reels, YouTube Shorts)? (0 - совсем нет, 10 - очень сильно)",
-        "Как часто после чтения поста или новости ты можешь пересказать только отдельные фразы, но не общий смысл? (0 - никогда, 10 - почти всегда)",
-        "Насколько для тебя важно получать лайки, комментарии или быстрый отклик на свои публикации? (0 - неважно, 10 - очень важно)",
-        "Когда я что-то не помню, я сразу лезу в телефон и ищу, даже не пытаясь вспомнить сам. (0 - никогда, 10 - всегда)",
-        "Мне комфортно получать информацию из 5–6 разных источников одновременно (0 - совсем некомфортно, 10 - очень комфортно)"
+        "Насколько сильно тебя привлекает бесконечная лента коротких роликов (TikTok, Reels, YouTube Shorts)? (0-10)",
+        "Как часто после чтения поста или новости ты можешь пересказать только отдельные фразы, но не общий смысл? (0-10)",
+        "Насколько для тебя важно получать лайки, комментарии или быстрый отклик на свои публикации? (0-10)",
+        "Когда я что-то не помню, я сразу лезу в телефон и ищу, даже не пытаясь вспомнить сам. (0-10)",
+        "Мне комфортно получать информацию из 5-6 разных источников одновременно (0-10)"
     ];
 
-    // Блок А3: распределение 100 баллов
-    // Блок Б: Постмодернистские черты (4 черты, каждая: частота + нравится) - используем NRS 0-10
     const postmodernItems = [
         { name: "Фрагментация", textFreq: "Как часто в твоей ленте попадаются несвязанные отрывки на одну тему? (0-10)", textLike: "Насколько тебе нравится такой формат? (0-10)" },
         { name: "Эклектизм", textFreq: "Как часто ты видишь смешение разных стилей, жанров, эпох в одном видео/посте? (0-10)", textLike: "Насколько это тебе нравится? (0-10)" },
-        { name: "Презентизм (культ настоящего)", textFreq: "Как часто ты смотришь видео или читаешь посты, которые не имеют связи с прошлым или будущим (чистый тренд)? (0-10)", textLike: "Насколько это тебе нравится? (0-10)" },
-        { name: "Интертекстуальность", textFreq: "Как часто ты встречаешь шутки или смысл, понятные только если знать предыдущие мемы/видео/игры? (0-10)", textLike: "Насколько тебе нравится их разгадывать? (0-10)" }
+        { name: "Презентизм", textFreq: "Как часто ты смотришь видео или читаешь посты без связи с прошлым или будущим (чистый тренд)? (0-10)", textLike: "Насколько это тебе нравится? (0-10)" },
+        { name: "Интертекстуальность", textFreq: "Как часто ты встречаешь шутки, понятные только если знать предыдущие мемы/видео
+
+
+? (0-10)", textLike: "Насколько тебе нравится их разгадывать? (0-10)" }
     ];
 
-    // Блок В: флажковые вопросы (10 вопросов) - NRS 0-10
     const flagQuestions = [
-        "Мне трудно сосредоточиться на том, что я делаю, даже когда хочется. Это было со мной с детства (до 12 лет). (0-10)",
-        "Я часто действую импульсивно, не подумав (выкрикиваю, перебиваю, делаю необдуманные покупки или поступки). (0-10)",
-        "Я постоянно беспокоюсь о будущем даже без реальной причины, мысли «зацикливаются» на плохом. (0-10)",
-        "У меня бывают приступы паники, сильное сердцебиение, потливость или дрожь. (0-10)",
-        "Последние недели я чувствую постоянную усталость, мне ничего не хочется, ранее любимые занятия не радуют. (0-10)",
-        "Мой сон и аппетит сильно изменились (сплю слишком много или не могу уснуть, ем гораздо больше или меньше обычного). (0-10)",
+        "Мне трудно сосредоточиться, даже когда хочется. Это было со мной с детства (до 12 лет). (0-10)",
+        "Я часто действую импульсивно, не подумав (выкрикиваю, перебиваю, делаю необдуманные поступки). (0-10)",
+        "Я постоянно беспокоюсь о будущем даже без реальной причины. (0-10)",
+        "У меня бывают приступы паники, сильное сердцебиение, потливость. (0-10)",
+        "Последние недели чувствую постоянную усталость, ничего не хочется, ранее любимое не радует. (0-10)",
+        "Мой сон и аппетит сильно изменились. (0-10)",
         "Я очень чувствителен к громким звукам, яркому свету, сильным запахам, и это меня перегружает. (0-10)",
-        "У меня бывают периоды (длятся несколько дней и дольше), когда энергия зашкаливает, я почти не сплю, но чувствую себя прекрасно, много говорю, строю грандиозные планы. (0-10)",
-        "У меня часто меняется настроение от очень активного и радостного до подавленного и усталого без явной причины. (0-10)",
-        "Когда я злюсь или расстраиваюсь, я могу сказать или сделать что-то, о чём потом жалею (вспыльчивость). (0-10)"
+        "У меня бывают периоды (несколько дней), когда энергия зашкаливает, почти не сплю, строю грандиозные планы. (0-10)",
+        "У меня часто меняется настроение от очень активного до подавленного без явной причины. (0-10)",
+        "Когда я злюсь, могу сказать или сделать то, о чём потом жалею (вспыльчивость). (0-10)"
     ];
 
-    // Демографические вопросы (возраст, пол, частота интернета)
-    // Для простоты используем html-форму с полями
-
-    // Создаём последовательность проб (timeline)
     let timeline = [];
 
-    // 1. Приветствие и инструкция
-    const welcome = {
+    // Приветствие
+    timeline.push({
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: `
-            <div style="text-align: center;">
-                <h2>Тест: Клиповое мышление у подростков</h2>
-                <p>Привет! Этот тест поможет понять, как ты воспринимаешь и перерабатываешь информацию, особенно в интернете и соцсетях.</p>
-                <p>Здесь нет правильных или неправильных ответов — важно отвечать честно, основываясь на своих обычных мыслях и привычках.</p>
-                <p>В тесте есть вопросы про разные стороны твоего самочувствия — это нужно, чтобы отличить особенности мышления от других состояний.</p>
-                <p>Все данные а
+        stimulus: '<div style="text-align:center;"><h2>Тест: Клиповое мышление у подростков</h2><p>Этот тест поможет понять, как ты воспринимаешь информацию.</p><p>Нет правильных или неправильных ответов — отвечай честно.</p><p>Нажми любую клавишу для продолжения.</p></div>'
+    });
 
-
-нонимны. Нажмите любую клавишу для продолжения.</p>
-            </div>
-        `,
-    };
-    timeline.push(welcome);
-
-    // 2. Демография (возраст, пол, интернет-активность)
-    const demographics = {
+    // Демография
+    timeline.push({
         type: jsPsychSurveyHtmlForm,
-        html: `
-            <h2>Несколько вопросов о вас</h2>
-            <div style="margin-bottom: 15px;">
-                <label>Ваш возраст (лет): <input type="number" name="age" min="14" max="19" required></label>
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label>Пол:</label>
-                <select name="gender">
-                    <option value="М">Мужской</option>
-                    <option value="Ж">Женский</option>
-                    <option value="Другое">Другое</option>
-                </select>
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label>Как часто ты пользуешься интернетом?</label>
-                <select name="internet_freq">
-                    <option value="rarely">Несколько раз в неделю</option>
-                    <option value="1-2h">Примерно 1–2 часа в день</option>
-                    <option value="3-5h">3–5 часов в день</option>
-                    <option value="6-8h">6–8 часов в день</option>
-                    <option value="8+">Более 8 часов в день</option>
-                </select>
-            </div>
-        `,
-        preamble: "Пожалуйста, ответьте на вопросы:",
+        html: '<h2>Несколько вопросов о вас</h2><div><label>Возраст: <input type="number" name="age" min="14" max="19" required></label></div><div><label>Пол: <select name="gender"><option>М</option><option>Ж</option><option>Другое</option></select></label></div><div><label>Как часто пользуешься интернетом? <select name="internet_freq"><option>Несколько раз в неделю</option><option>1-2 часа в день</option><option>3-5 часов в день</option><option>6-8 часов в день</option><option>Более 8 часов в день</option></select></label></div>',
         button_label: "Далее",
         data: { phase: "demographics" }
-    };
-    timeline.push(demographics);
+    });
 
-    // 3. Блок А1: Likert 12 вопросов
-    const likertBlock = {
+    // Likert
+    timeline.push({
         type: jsPsychSurveyLikert,
         questions: likertQuestions.map(q => ({ prompt: q, labels: likertLabels, required: true })),
-        preamble: "<h2>Блок А1. Твой стиль мышления</h2><p>Оцени, насколько каждое утверждение похоже на тебя (1–5).</p>",
-        randomize_question_order: false,
+        preamble: "<h2>Блок А1. Твой стиль мышления</h2>",
         data: { phase: "likert" }
-    };
-    timeline.push(likertBlock);
+    });
 
-    // 4. Блок А2: NRS 0-10 (используем survey-html-form c ползунками или просто числовой ввод)
-    // Создадим кастомный HTML с ползунками для удобства
-    let nrsHtml = `<h2>Блок А2. Оцени по шкале от 0 до 10</h2>`;
+    // NRS блок А2
+    let nrsHtml = '<h2>Блок А2. Оцени по шкале 0-10</h2>';
     for (let i = 0; i < nrsQuestions.length; i++) {
-        nrsHtml += `
-            <div style="margin-bottom: 25px;">
-                <label><strong>${nrsQuestions[i]}</strong></label>
+        nrsHtml += `<div style="margin-bottom:20px;"><label><strong>${nrsQuestions[i]}</strong></label>
 
-                <input type="range" name="nrs_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value">
-                <output>5</output>
-            </div>
-        `;
+            <input type="range" name="nrs_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value">
+            <output>5</output></div>`;
     }
-    const nrsBlock = {
+    timeline.push({
         type: jsPsychSurveyHtmlForm,
         html: nrsHtml,
         button_label: "Далее",
         data: { phase: "nrs" }
-    };
-    timeline.push(nrsBlock);
+    });
 
-    // 5. Блок А3: распределение 100 баллов (два поля, сумма 100)
-    const distributionHtml = `
-        <h2>Блок А3. Распределение баллов</h2>
-        <p>Из 100 баллов распредели, как обычно работает твоё мышление:</p>
-        <div style="margin-bottom: 15px;">
-            <label>На фрагментарное, быстрое, «клиповое»: <input type="number" name="clip_score" min="0" max="100" step="1" value="50" required></label>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>На последовательное, целостное, аналитическое: <input type="number" name="holistic_score" min="0" max="100" step="1" value="50" required></label>
-        </div>
-        <p><em>В сумме должно быть 100. Если сумма не 100, будет показана ошибка.</em></p>
-    `;
-    const distributionBlock = {
+    // Распределение 100 баллов
+    timeline.push({
         type: jsPsychSurveyHtmlForm,
-        html: distributionHtml,
+        html: '<h2>Блок А3. Распределение 100 баллов</h2><div><label>На фрагментарное, быстрое, "клиповое": <input type="number" name="clip" min="0" max="100" value="50" required></label></div><div><label>На последовательное, целостное: <input type="number" name="holistic" min="0" max="100" value="50" required></label></div><p>Сумма должна быть 100.</p>',
         button_label: "Далее",
-        on_load: () => {
-            // небольшая валидация при отправке будет в on_finish
-        },
         on_finish: (data) => {
-            const responses = data.response;
-            let clip = parseInt(responses.clip_score) || 0;
-            let holistic = parseInt(responses.holistic_score) || 0;
-            if (clip + ho
-
-
-listic !== 100) {
-                alert("Сумма должна равняться 100. Пожалуйста, исправьте.");
-                data.response = null; // предотвратить сохранение неверных данных
-                // не сохраняем, но jsPsych продолжит? Лучше перезапросить – для простоты выкинем предупреждение и оставим как есть, но в анализе потом проверим.
-                // Можно повторить пробу – но для простоты просто установим значение по умолчанию, если сумма не 100.
-                // Здесь мы не можем отменить сохранение, но в анализе потом проверим.
+            let clip = parseInt(data.response.clip) || 50;
+            let hol = parseInt(data.response.holistic) || 50;
+            if (clip + hol !== 100) {
+                alert("Сумма не равна 100. Будет использовано среднее значение 50/50.");
+                data.response.clip = 50;
+                data.response.holistic = 50;
             }
         },
         data: { phase: "distribution" }
-    };
-    timeline.push(distributionBlock);
+    });
 
-    // 6. Блок Б: постмодернистские черты (4 черты * 2 вопроса = 8 NRS)
-    let postmodernHtml = `<h2>Блок Б. Влияние соцсетей и контента</h2>
-        <p>Оцени, как часто ты встречаешься с таким контентом и насколько он тебе нравится (0 – никогда/совсем не нравится, 10 – постоянно/очень нравится).</p>`;
+    // Постмодернизм
+    let pmHtml = '<h2>Блок Б. Влияние соц
+
+
+сетей</h2>';
     for (let i = 0; i < postmodernItems.length; i++) {
-        postmodernHtml += `
-            <div style="border-top: 1px solid #ccc; padding-top: 15px; margin-top: 15px;">
-                <h3>${postmodernItems[i].name}</h3>
-                <div><strong>${postmodernItems[i].textFreq}</strong>
-
-                    <input type="range" name="pm_freq_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value">
-                    <output>5</output>
-                </div>
-                <div><strong>${postmodernItems[i].textLike}</strong>
-
-                    <input type="range" name="pm_like_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value">
-                    <output>5</output>
-                </div>
-            </div>
-        `;
+        pmHtml += `<h3>${postmodernItems[i].name}</h3>
+            <div><strong>${postmodernItems[i].textFreq}</strong>
+<input type="range" name="pm_freq_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value"><output>5</output></div>
+            <div><strong>${postmodernItems[i].textLike}</strong>
+<input type="range" name="pm_like_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value"><output>5</output></div>`;
     }
-    const postmodernBlock = {
+    timeline.push({
         type: jsPsychSurveyHtmlForm,
-        html: postmodernHtml,
+        html: pmHtml,
         button_label: "Далее",
         data: { phase: "postmodern" }
-    };
-    timeline.push(postmodernBlock);
+    });
 
-    // 7. Блок В: флажковые вопросы (10 NRS)
-    let flagHtml = `<h2>Блок В. Несколько вопросов о твоём самочувствии</h2>
-        <p>Оцени, насколько каждое утверждение верно для тебя за <strong>последние несколько недель</strong>, по шкале 0–10 (0 – совсем нет, 10 – очень сильно).</p>`;
+    // Флажковый блок
+    let flagHtml = '<h2>Блок В. Несколько вопросов о самочувствии</h2>';
     for (let i = 0; i < flagQuestions.length; i++) {
-        flagHtml += `
-            <div style="margin-bottom: 20px;">
-                <label><strong>${flagQuestions[i]}</strong></label>
+        flagHtml += `<div style="margin-bottom:20px;"><strong>${flagQuestions[i]}</strong>
 
-                <input type="range" name="flag_${i}" min="0" max="10" step="1" value="0" oninput="this.nextElementSibling.value=this.value">
-                <output>0</output>
-            </div>
-        `;
+            <input type="range" name="flag_${i}" min="0" max="10" step="1" value="0" oninput="this.nextElementSibling.value=this.value">
+            <output>0</output></div>`;
     }
-    const flagBlock = {
+    timeline.push({
         type: jsPsychSurveyHtmlForm,
         html: flagHtml,
         button_label: "Завершить тест",
         data: { phase: "flags" },
-        on_finish: () => {
-            // после последнего блока запускаем обработку результатов
-            computeAndShowResults();
-        }
-    };
-    timeline.push(flagBlock);
+        on_finish: () => computeAndShowResults()
+    });
 
-    // Функция сбора данных и расчёта
+    // Функция расчёта результатов
     function computeAndShowResults() {
-        // Получаем все данные
-        const allData = jsPsych.data.get().json();
         const trials = jsPsych.data.get().trials;
-
-        // Извлекаем ответы по фазам
-        let demography = {};
-        let likertResponses = [];
-        let nrsResponses = {};
-        let distributionScores = {};
-        let postmodernResponses = [];
-        let flagResponses = [];
-
-        for (let trial of trials) {
-            if (trial.phase === "demographics") {
-                demography = trial.response || {};
-            } else if (trial.phase === "likert") {
-                likertResponses = trial.response ? Object.values(trial.response).map(v => parseInt(v)) : [];
-            } else if (trial.phase === "nrs") {
-                nrsResponses = trial.response || {};
-            } else if (trial.phase === "distribution") {
-                distributionScores = trial.response || {};
-
-
-} else if (trial.phase === "postmodern") {
-                postmodernResponses = trial.response || {};
-            } else if (trial.phase === "flags") {
-                flagResponses = trial.response || {};
-            }
+        let likertResp = [], nrsResp = {}, distResp = {}, pmResp = {}, flagResp = {}, demo = {};
+        for (let t of trials) {
+            if (t.phase === "likert" && t.response) likertResp = Object.values(t.response).map(v => parseInt(v));
+            if (t.phase === "nrs") nrsResp = t.response || {};
+            if (t.phase === "distribution") distResp = t.response || {};
+            if (t.phase === "postmodern") pmResp = t.response || {};
+            if (t.phase === "flags") flagResp = t.response || {};
+            if (t.phase === "demographics") demo = t.response || {};
         }
-
-        // ---------- Блок А1: Likert ----------
-        let likertSum = 0;
-        let maxLikert = likertQuestions.length * 5;
-        if (likertResponses.length === likertQuestions.length) {
-            // Вопрос 10 обратный (индекс 9)
-            let reversed = [...likertResponses];
-            reversed[9] = 6 - reversed[9]; // 1->5, 2->4, 3->3, 4->2, 5->1
-            likertSum = reversed.reduce((a,b) => a + b, 0);
+        // ИКМ расчёт
+        let likertSum = 0, maxLikert = 12*5;
+        if (likertResp.length === 12) {
+            let rev = [...likertResp];
+            rev[9] = 6 - rev[9];
+            likertSum = rev.reduce((a,b)=>a+b,0);
         }
         let ikm_a1 = (likertSum / maxLikert) * 100;
-
-        // ---------- Блок А2: NRS ----------
         let nrsSum = 0;
-        let maxNrs = 5 * 10;
-        for (let i = 0; i < 5; i++) {
-            let val = parseInt(nrsResponses[`nrs_${i}`]) || 0;
-            nrsSum += val;
-        }
-        let ikm_a2 = (nrsSum / maxNrs) * 100;
-
-        // ---------- Блок А3: распределение ----------
-        let clipDist = parseInt(distributionScores.clip_score) || 0;
-        let holisticDist = parseInt(distributionScores.holistic_score) || 0;
-        if (clipDist + holisticDist !== 100) {
-            // если сумма не 100, корректируем (берём clip как есть, но лучше нормализовать)
-            // условно: clipDist = clipDist / (clipDist+holisticDist)*100
-            let total = clipDist + holisticDist;
-            if (total > 0) clipDist = (clipDist / total) * 100;
-            else clipDist = 50;
-        }
+        for (let i=0; i<5; i++) nrsSum += parseInt(nrsResp[`nrs_${i}`]) || 0;
+        let ikm_a2 = (nrsSum / 50) * 100;
+        let clipDist = parseInt(distResp.clip) || 50;
         let ikm_a3 = clipDist;
+        let ikm = 0.5*ikm_a1 + 0.3*ikm_a2 + 0.2*ikm_a3;
 
-        // Итоговый индекс КМ
-        let ikm = 0.5 * ikm_a1 + 0.3 * ikm_a2 + 0.2 * ikm_a3;
-
-        // ---------- Блок Б: постмодернистские черты ----------
-        let postmodernScores = [];
-        for (let i = 0; i < postmodernItems.length; i++) {
-            let freq = parseInt(postmodernResponses[`pm_freq_${i}`]) || 0;
-            let like = parseInt(postmodernResponses[`pm_like_${i}`]) || 0;
-            let avg = (freq + like) / 2;
-            postmodernScores.push(avg);
+        // Постмодерн баллы
+        let pmScores = [];
+        for (let i=0; i<4; i++) {
+            let freq = parseInt(pmResp[`pm_freq_${i}`]) || 0;
+            let like = parseInt(pmResp[`pm_like_${i}`]) || 0;
+            pmScores.push((freq+like)/2);
         }
 
-        // ---------- Блок В: флажковая дифференциация ----------
-        // Состояния и соответствующие индексы вопросов (0-index)
-        const flagIndices = {
-            adhd: [0,1],           // невнимательность + импульсивность
-            anxiety: [2,3],        // тревога
-            depression: [4,5],     // депрессия/апатия
-            sensitivity: [6],      // сенсорная чувствительность
-            bipolar: [7],          // гипомания/мания
-            emotional: [8,9]       // эмоциональная нестабильность/холерик
-        };
-        let flagScores = {};
-        for (let i = 0; i < 10; i++) {
-            let val = parseInt(flagResponses[`flag_${i}`]) || 0;
-            flagResponses[i] = val;
-        }
-        for (let [key, indices] of Object.entries(flagIndices)) {
-            let sum = 0;
-            let max = indices.length * 10;
-            for (let idx of indices) {
-                sum += flagResponses[idx] || 0;
-            }
-            let percent = (sum / max) * 100;
-            flagScores[key] = percent;
-        }
+        // Флажки
+        let flagVals = [];
+        for (let i=0; i<10; i++) flagVals.push(parseInt(flagResp[`flag_${i}`]) || 0);
+        const adhd = (flagVals[0] + flagVals[1]) / 20 * 100;
+        const anxiety = (flagVals[2] + flagVals[3]) / 20 * 100;
+        const depression = (flagVals[4] + flagVals[5]) / 20 * 100;
+        const sensitivity = (flagVals[6]) / 10 * 100;
+        const bipolar = (flagVals[7]) / 10 * 100;
+        const emotional = (flagVals[8] + flagVals[9]) / 20 * 100;
+        let warnings = [];
+        if (adhd >= 70) warnings.push("СДВГ");
+        if (anxiety >= 70) warnings.push("тревожное расстройство");
+        if (depression >= 70) warnings.push("депрессия/апатия");
+        if (sensitivity >= 70) warnings.push("высокая сенсорная чувствительность");
+        if (bipolar >= 70) warnings.push("биполярно-аффективное расстройство");
+        if (emotional >= 70) warnings.push("эмоциональная нестабильность/холерический темперамент");
 
-        // Генерация рекомендаций
-        let flagWarnings = [];
-        if (flagScores.adhd >= 70) flagWarnings.push("СДВГ (синдром дефицита внимания)");
-        if (flagScores.anxiety >= 70) flagWarnings.push("тревожное расстройство");
-        if (flagScores.depression >= 70) flagWarnings.push("депрессия/апатия");
-        if (flagScores.sensitivity >= 70) flagWarnings.push("высокая сенсорная чувствительность");
-        if (flagScores.bipolar >= 70) flagWarnings.push("биполярно-аффективное расстройство (маниакальный эпизод)");
-        if (flagScores.emotional >= 70) flagWarnings.push("эмоциональная нестабильность / холерический темперамент (требует уточнения)");
-
-        // Интерпретация ИКМ
-        let ikmLevel = "";
-        if (ikm <= 25) ikmLevel = "Низкий (преобладает целостное, аналитическое мышление)";
-        else if (ikm <= 50) ikmL
+        let level = "";
+        if (ikm <= 25) level = "Низкий (целостное мышление)";
+        else if (ikm <= 50) lev
 
 
-evel = "Умеренный (смешанный стиль)";
-        else if (ikm <= 75) ikmLevel = "Высокий (выраженное клиповое мышление)";
-        else ikmLevel = "Очень высокий (риск дезадаптации в академической среде)";
+el = "Умеренный (смешанный стиль)";
+        else if (ikm <= 75) level = "Высокий (выраженное клиповое мышление)";
+        else level = "Очень высокий";
 
-        // Формируем HTML результата
-        let resultHtml = `
-            <div style="background: white; padding: 2rem; border-radius: 20px;">
-                <h2>Результаты теста</h2>
-                <div class="result-section">
-                    <h3>Индекс клипового мышления (ИКМ): ${ikm.toFixed(1)} из 100</h3>
-                    <p><strong>Уровень:</strong> ${ikmLevel}</p>
-                    <p>Чем выше индекс, тем больше твой стиль мышления тяготеет к фрагментарности, быстрому переключению, поверхностной обработке информации.</p>
-                    <p>${ikm > 60 ? "🔹 В современной цифровой среде это адаптивный стиль, но он может мешать при выполнении сложных учебных задач, требующих концентрации и последовательного мышления." : "🔹 Ты обычно склонен(на) вдумчиво обрабатывать информацию, видеть связи между фактами. Это помогает в учёбе и аналитической работе."}</p>
-                </div>
-                <div class="result-section">
-                    <h3>Твоё погружение в постмодернистские форматы соцсетей (0-10)</h3>
-                    <ul>
-                        <li><strong>Фрагментация:</strong> ${postmodernScores[0].toFixed(1)}</li>
-                        <li><strong>Эклектизм:</strong> ${postmodernScores[1].toFixed(1)}</li>
-                        <li><strong>Презентизм (культ настоящего):</strong> ${postmodernScores[2].toFixed(1)}</li>
-                        <li><strong>Интертекстуальность:</strong> ${postmodernScores[3].toFixed(1)}</li>
-                    </ul>
-                    <p>Чем выше баллы, тем больше твоя медиасреда «тренирует» клиповое мышление.</p>
-                </div>
-        `;
-
-        if (flagWarnings.length > 0) {
-            resultHtml += `<div class="alert"><strong>⚠️ Внимание!</strong> По результатам опроса есть признаки, которые могут указывать на состояние, требующее очной консультации психиатра или невролога:
- ${flagWarnings.join(", ")}.
- Результаты по клиповому мышлению в этом случае могут быть искажены. Рекомендуем обратиться к специалисту.</div>`;
+        let resultHtml = `<div><h2>Результаты теста</h2>
+            <div class="result-section"><h3>Индекс клипового мышления: ${ikm.toFixed(1)} из 100</h3><p>Уровень: ${level}</p></div>
+            <div class="result-section"><h3>Постмодернистские форматы (0-10)</h3>
+            <ul><li><strong>Фрагментация:</strong> ${pmScores[0].toFixed(1)}</li><li><strong>Эклектизм:</strong> ${pmScores[1].toFixed(1)}</li><li><strong>Презентизм:</strong> ${pmScores[2].toFixed(1)}</li><li><strong>Интертекстуальность:</strong> ${pmScores[3].toFixed(1)}</li></ul></div>`;
+        if (warnings.length > 0) {
+            resultHtml += `<div class="alert"><strong>Внимание!</strong> Признаки: ${warnings.join(", ")}. Рекомендуется консультация специалиста.</div>`;
         } else {
-            resultHtml += `<div class="alert" style="background:#d4edda; border-left-color: #28a745;"><strong>✅ По дополнительным вопросам не выявлено выраженных признаков клинических состояний.</strong> Если у тебя возникают сомнения или трудности, всегда можно обратиться к школьному психологу.</div>`;
+            resultHtml += `<div class="alert" style="background:#d4edda;border-left-color:#28a745;">По дополнительным вопросам не выявлено выраженных признаков клинических состояний.</div>`;
         }
-
-        resultHtml += `<button id="restartBtn" style="display:block; margin: 20px auto;">Пройти тест заново</button></div>`;
-        
-        // Очищаем и показываем результат
+        resultHtml += `<button id="restartBtn" style="display:block; margin:20px auto;">Пройти заново</button></div>`;
         document.getElementById("jspsych-target").innerHTML = resultHtml;
-        document.getElementById("restartBtn").addEventListener("click", () => {
-            location.reload();
-        });
+        document.getElementById("restartBtn").addEventListener("click", () => location.reload());
     }
 
-    // Запуск теста
-    jsPsych.init({
-        timeline: timeline,
-        show_progress_bar: true,
-        on_finish: () => {
-            // уже вызывается внутри on_finish последнего блока, но дополнительно можно ничего не делать
-        }
-    });
+    jsPsych.init({ timeline: timeline, show_progress_bar: true });
 </script>
 </body>
 </html>

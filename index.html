@@ -67,13 +67,13 @@
 
     // Приветствие
     timeline.push({
-        type: jsPsychHtmlKeyboardResponse,
+        type: 'html-keyboard-response',
         stimulus: '<div style="text-align:center;"><h2>Тест: Клиповое мышление у подростков</h2><p>Этот тест поможет понять, как ты воспринимаешь информацию.</p><p>Нет правильных или неправильных ответов — отвечай честно.</p><p>Нажми любую клавишу для продолжения.</p></div>'
     });
 
     // Демография
     timeline.push({
-        type: jsPsychSurveyHtmlForm,
+        type: 'survey-html-form',
         html: '<h2>Несколько вопросов о вас</h2><div><label>Возраст: <input type="number" name="age" min="14" max="19" required></label></div><div><label>Пол: <select name="gender"><option>М</option><option>Ж</option><option>Другое</option></select></label></div><div><label>Как часто пользуешься интернетом? <select name="internet_freq"><option>Несколько раз в неделю</option><option>1-2 часа в день</option><option>3-5 часов в день</option><option>6-8 часов в день</option><option>Более 8 часов в день</option></select></label></div>',
         button_label: "Далее",
         data: { phase: "demographics" }
@@ -81,7 +81,7 @@
 
     // Likert
     timeline.push({
-        type: jsPsychSurveyLikert,
+        type: 'survey-likert',
         questions: likertQuestions.map(q => ({ prompt: q, labels: likertLabels, required: true })),
         preamble: "<h2>Блок А1. Твой стиль мышления</h2>",
         data: { phase: "likert" }
@@ -96,7 +96,7 @@
             <output>5</output></div>`;
     }
     timeline.push({
-        type: jsPsychSurveyHtmlForm,
+        type: 'survey-html-form',
         html: nrsHtml,
         button_label: "Далее",
         data: { phase: "nrs" }
@@ -104,7 +104,7 @@
 
     // Распределение 100 баллов
     timeline.push({
-        type: jsPsychSurveyHtmlForm,
+        type: 'survey-html-form',
         html: '<h2>Блок А3. Распределение 100 баллов</h2><div><label>На фрагментарное, быстрое, "клиповое": <input type="number" name="clip" min="0" max="100" value="50" required></label></div><div><label>На последовательное, целостное: <input type="number" name="holistic" min="0" max="100" value="50" required></label></div><p>Сумма должна быть 100.</p>',
         button_label: "Далее",
         on_finish: (data) => {
@@ -129,7 +129,7 @@
 <input type="range" name="pm_like_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value"><output>5</output></div>`;
     }
     timeline.push({
-        type: jsPsychSurveyHtmlForm,
+        type: 'survey-html-form',
         html: pmHtml,
         button_label: "Далее",
         data: { phase: "postmodern" }
@@ -144,7 +144,7 @@
             <output>0</output></div>`;
     }
     timeline.push({
-        type: jsPsychSurveyHtmlForm,
+        type: 'survey-html-form',
         html: flagHtml,
         button_label: "Завершить тест",
         data: { phase: "flags" },

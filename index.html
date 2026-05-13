@@ -2,9 +2,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Тест: Клиповое мышление у подростков</title>
-    <!-- 1. Загружаем основные стили jsPsych -->
+    <!-- Стили jsPsych -->
     <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
@@ -18,22 +18,18 @@
 <body>
 <div id="jspsych-target"></div>
 
-<!-- 2. Загружаем саму библиотеку jsPsych (CORE) -->
+<!-- Библиотека jsPsych и плагины -->
 <script src="https://unpkg.com/jspsych@7.3.4"></script>
-
-<!-- 3. Загружаем необходимые плагины (каждый плагин - отдельный файл) -->
 <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
 <script src="https://unpkg.com/@jspsych/plugin-survey-likert@1.1.3"></script>
 <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.0.0"></script>
 
 <script>
-    // ----- Инициализация jsPsych и создание timeline -----
-    const jsPsych = initJsPsych(); // <--- КЛЮЧЕВОЙ МОМЕНТ
-
+    // Инициализация
+    const jsPsych = initJsPsych();
     let timeline = [];
 
-    // ---- Вопросы для блоков ----
-    // ... (весь массив вопросов такой же, как в предыдущем коде) ...
+    // ----- Вопросы -----
     const likertQuestions = [
         "Когда я читаю длинный текст (больше двух страниц), мне трудно сосредоточиться, я быстро отвлекаюсь.",
         "Я предпочитаю короткие видео (до 1 минуты) вместо фильмов или лекций.",
@@ -78,85 +74,15 @@
         "Когда я злюсь, могу сказать или сделать то, о чём потом жалею (вспыльчивость). (0-10)"
     ];
 
-    // ----- Функция для отображения результатов -----
-    function computeAndShowResults() {
-        const trials = jsPsych.data.get().trials;
-        let likertResp = [], nrsResp = {}, distResp = {}, pmResp = {}, flagResp = {};
-        for (let t of trials) {
-            if (t.phase === "likert" && t.response) likertResp = Object.values(t.response).map(v => parseInt(v));
-            if (t.phase === "nrs") nrsResp = t.response || {};
-            if (t.phase === "distribution") distResp = t.response || {};
-            if (t.phase === "postmodern") pmResp = t.response || {};
-            if (t.phase === "flags") flagResp = t.response || {};
-        }
-        // ИКМ расчёт
-        let likertSum = 0, maxLikert = 12*5;
-        if (likertResp.length === 12) {
-            let rev = [...likertResp];
-            rev[9] = 6 - rev[9];
-            likertSum = rev.reduce((a,b)=>a+b,0);
-        }
-        let ikm_a1 = (likertSum / maxLikert) * 100;
-        let nrsSum = 0;
-        for (let i=0; i<5; i++) nrsSum += parseInt(nrsResp[`nrs_${i}`]) || 0;
-        let ikm_a2 = (nrsSum / 50) * 100;
-        let clipDist = parseInt(distResp.clip) || 50;
-        let ikm_a3 = clipDist;
-        let ikm = 0.5*ikm_a1 + 0.3*ikm_a2 + 0.2*ikm_a3;
-
-        // Постмодерн баллы
-        let pmScores = [];
-        for (let i=0; i<4; i++) {
-            let freq = parseInt(pmResp[`pm_freq_${i}`]) || 0;
-            let like = parseInt(pmResp[`pm_like_${i}`]) || 0;
-            pmScores.push((freq+like)/2);
-        }
-
-        // Флажки
-        let flagVals = [];
-        for (let i=0; i<10; i++) flagVals.push(parseInt(flagResp[`flag_${i}`]) || 0);
-        const adhd = (flagVals[0] + flagVals[1]) / 20 * 100;
-        const anxiety = (flagVals[2] + flagVals[3]) / 20 * 100;
-        const depression = (flagVals[4] + flagVals[5]) / 20 * 100;
-        const sensitivity = (flagVals[6]) / 10 * 100;
-        const bipolar = (flagVals[7]) / 10 * 100;
-        const emotional = (flagVals[8] + flagVals[9]) / 20 * 100;
-        let warnings = [];
-        if (adhd >= 70) warnings.push("СДВГ");
-        if (anxiety >= 70) warnings.push("тревожное расстройство");
-        if (depression >= 70) warnings.push("депрессия/апатия");
-        if (sensitivity >= 70) warnings.push("высокая сенсорная чувствительность");
-        if (bipolar >= 70) warnings.push("биполярно-аффективное расстройство");
-        if (emotional >= 70) warnings.push("эмоциональная нестабильность/холерический темперамент");
-
-        let level = "";
-        if (ikm <= 25) level = "Низкий (целостное мышление)";
-        else if (ikm <= 50) level = "Умеренный (смешанный стиль)";
-        else if (ikm <= 75) level = "Высокий (выраженное клиповое мышление)";
-        else level = "Очень высокий";
-
-        let resultHtml = `<div><h2>Результаты теста</h2>
-            <div class="result-section"><h3>Индекс клипового мышления: ${ikm.toFixed(1)} из 100</h3><p>Уровень: ${level}</p></div>
-            <div class="result-section"><h3>Постмодернистские форматы (0-10)</h3>
-            <ul><li><strong>Фрагментация:</strong> ${pmScores[0].toFixed(1)}</li><li><strong>Эклектизм:</strong> ${pmScores[1].toFixed(1)}</li><li><strong>Презентизм:</strong> ${pmScores[2].toFixed(1)}</li><li><strong>Интертекстуальность:</strong> ${pmScores[3].toFixed(1)}</li></ul></div>`;
-        if (warnings.length > 0) {
-            resultHtml += `<div class="alert"><strong>Внимание!</strong> Признаки: ${warnings.join(", ")}. Рекомендуется консультация специалиста.</div>`;
-        } else {
-            resultHtml += `<div class="alert" style="background:#d4edda;border-left-color:#28a745;">По дополнительным вопросам не выявлено выраженных признаков клинических состояний.</div>`;
-        }
-        resultHtml += `<button id="restartBtn" style="display:block; margin:20px auto;">Пройти заново</button></div>`;
-        document.getElementById("jspsych-target").innerHTML = resultHtml;
-        document.getElementById("restartBtn").addEventListener("click", () => location.reload());
-    }
-
-    // ----- ДОБАВЛЯЕМ ВСЕ БЛОКИ В TIMELINE -----
-    // Приветствие
+    // ----- Приветствие -----
     timeline.push({
-        type: jsPsychHtmlKeyboardResponse,
-        stimulus: '<div style="text-align:center;"><h2>Тест: Клиповое мышление у подростков</h2><p>Этот тест поможет понять, как ты воспринимаешь информацию.</p><p>Нет правильных или неправильных ответов — отвечай честно.</p><p>Нажми любую клавишу для продолжения.</p></div>'
+        type: jsPsychSurveyHtmlForm,
+        html: '<div style="text-align:center;"><h2>Тест: Клиповое мышление у подростков</h2><p>Этот тест поможет понять, как ты воспринимаешь информацию.</p><p>Нет правильных или неправильных ответов — отвечай честно.</p><p>Нажмите кнопку, чтобы начать.</p></div>',
+        button_label: "Начать тест",
+        data: { phase: "welcome" }
     });
 
-    // Демография
+    // ----- Демография -----
     timeline.push({
         type: jsPsychSurveyHtmlForm,
         html: '<h2>Несколько вопросов о вас</h2><div><label>Возраст: <input type="number" name="age" min="14" max="19" required></label></div><div><label>Пол: <select name="gender"><option>М</option><option>Ж</option><option>Другое</option></select></label></div><div><label>Как часто пользуешься интернетом? <select name="internet_freq"><option>Несколько раз в неделю</option><option>1-2 часа в день</option><option>3-5 часов в день</option><option>6-8 часов в день</option><option>Более 8 часов в день</option></select></label></div>',
@@ -164,7 +90,7 @@
         data: { phase: "demographics" }
     });
 
-    // Likert
+    // ----- Likert -----
     timeline.push({
         type: jsPsychSurveyLikert,
         questions: likertQuestions.map(q => ({ prompt: q, labels: likertLabels, required: true })),
@@ -172,7 +98,7 @@
         data: { phase: "likert" }
     });
 
-    // NRS блок А2
+    // ----- NRS -----
     let nrsHtml = '<h2>Блок А2. Оцени по шкале 0-10</h2>';
     for (let i = 0; i < nrsQuestions.length; i++) {
         nrsHtml += `<div style="margin-bottom:20px;"><label><strong>${nrsQuestions[i]}</strong></label><br>
@@ -186,7 +112,7 @@
         data: { phase: "nrs" }
     });
 
-    // Распределение 100 баллов
+    // ----- Распределение 100 баллов -----
     timeline.push({
         type: jsPsychSurveyHtmlForm,
         html: '<h2>Блок А3. Распределение 100 баллов</h2><div><label>На фрагментарное, быстрое, "клиповое": <input type="number" name="clip" min="0" max="100" value="50" required></label></div><div><label>На последовательное, целостное: <input type="number" name="holistic" min="0" max="100" value="50" required></label></div><p>Сумма должна быть 100.</p>',
@@ -203,7 +129,7 @@
         data: { phase: "distribution" }
     });
 
-    // Постмодернизм
+    // ----- Постмодернизм -----
     let pmHtml = '<h2>Блок Б. Влияние соцсетей</h2>';
     for (let i = 0; i < postmodernItems.length; i++) {
         pmHtml += `<h3>${postmodernItems[i].name}</h3>
@@ -219,7 +145,7 @@
         data: { phase: "postmodern" }
     });
 
-    // Флажковый блок
+    // ----- Флажковый блок -----
     let flagHtml = '<h2>Блок В. Несколько вопросов о самочувствии</h2>';
     for (let i = 0; i < flagQuestions.length; i++) {
         flagHtml += `<div style="margin-bottom:20px;"><strong>${flagQuestions[i]}</strong><br>
@@ -230,9 +156,96 @@
         type: jsPsychSurveyHtmlForm,
         html: flagHtml,
         button_label: "Завершить тест",
-        data: { phase: "flags" },
-        on_finish: () => computeAndShowResults()
+        data: { phase: "flags" }
     });
+
+    // ----- ОТДЕЛЬНАЯ ПРОБА ДЛЯ ОТОБРАЖЕНИЯ РЕЗУЛЬТАТОВ (без очистки) -----
+    // После того как все данные собраны, запускаем пробу, которая показывает результаты.
+    // Используем html-keyboard-response, но с кнопкой перезапуска.
+    const showResults = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function() {
+            // Получаем все данные
+            const trials = jsPsych.data.get().trials;
+            let likertResp = [], nrsResp = {}, distResp = {}, pmResp = {}, flagResp = {};
+            for (let t of trials) {
+                if (t.phase === "likert" && t.response) likertResp = Object.values(t.response).map(v => parseInt(v));
+                if (t.phase === "nrs") nrsResp = t.response || {};
+                if (t.phase === "distribution") distResp = t.response || {};
+                if (t.phase === "postmodern") pmResp = t.response || {};
+                if (t.phase === "flags") flagResp = t.response || {};
+            }
+            // ИКМ расчёт
+            let likertSum = 0, maxLikert = 12*5;
+            if (likertResp.length === 12) {
+                let rev = [...likertResp];
+                rev[9] = 6 - rev[9];
+                likertSum = rev.reduce((a,b)=>a+b,0);
+            }
+            let ikm_a1 = (likertSum / maxLikert) * 100;
+            let nrsSum = 0;
+            for (let i=0; i<5; i++) nrsSum += parseInt(nrsResp[`nrs_${i}`]) || 0;
+            let ikm_a2 = (nrsSum / 50) * 100;
+            let clipDist = parseInt(distResp.clip) || 50;
+            let ikm_a3 = clipDist;
+            let ikm = 0.5*ikm_a1 + 0.3*ikm_a2 + 0.2*ikm_a3;
+
+            // Постмодерн баллы
+            let pmScores = [];
+            for (let i=0; i<4; i++) {
+                let freq = parseInt(pmResp[`pm_freq_${i}`]) || 0;
+                let like = parseInt(pmResp[`pm_like_${i}`]) || 0;
+                pmScores.push((freq+like)/2);
+            }
+
+            // Флажки
+            let flagVals = [];
+            for (let i=0; i<10; i++) flagVals.push(parseInt(flagResp[`flag_${i}`]) || 0);
+            const adhd = (flagVals[0] + flagVals[1]) / 20 * 100;
+            const anxiety = (flagVals[2] + flagVals[3]) / 20 * 100;
+            const depression = (flagVals[4] + flagVals[5]) / 20 * 100;
+            const sensitivity = (flagVals[6]) / 10 * 100;
+            const bipolar = (flagVals[7]) / 10 * 100;
+            const emotional = (flagVals[8] + flagVals[9]) / 20 * 100;
+            let warnings = [];
+            if (adhd >= 70) warnings.push("СДВГ");
+            if (anxiety >= 70) warnings.push("тревожное расстройство");
+            if (depression >= 70) warnings.push("депрессия/апатия");
+            if (sensitivity >= 70) warnings.push("высокая сенсорная чувствительность");
+            if (bipolar >= 70) warnings.push("биполярно-аффективное расстройство");
+            if (emotional >= 70) warnings.push("эмоциональная нестабильность/холерический темперамент");
+
+            let level = "";
+            if (ikm <= 25) level = "Низкий (целостное мышление)";
+            else if (ikm <= 50) level = "Умеренный (смешанный стиль)";
+            else if (ikm <= 75) level = "Высокий (выраженное клиповое мышление)";
+            else level = "Очень высокий";
+
+            let resultHtml = `<div><h2>Результаты теста</h2>
+                <div class="result-section"><h3>Индекс клипового мышления: ${ikm.toFixed(1)} из 100</h3><p>Уровень: ${level}</p></div>
+                <div class="result-section"><h3>Постмодернистские форматы (0-10)</h3>
+                <ul><li><strong>Фрагментация:</strong> ${pmScores[0].toFixed(1)}</li><li><strong>Эклектизм:</strong> ${pmScores[1].toFixed(1)}</li><li><strong>Презентизм:</strong> ${pmScores[2].toFixed(1)}</li><li><strong>Интертекстуальность:</strong> ${pmScores[3].toFixed(1)}</li></ul></div>`;
+            if (warnings.length > 0) {
+                resultHtml += `<div class="alert"><strong>Внимание!</strong> Признаки: ${warnings.join(", ")}. Рекомендуется консультация специалиста.</div>`;
+            } else {
+                resultHtml += `<div class="alert" style="background:#d4edda;border-left-color:#28a745;">По дополнительным вопросам не выявлено выраженных признаков клинических состояний.</div>`;
+            }
+            resultHtml += `<button id="restartBtn" style="display:block; margin:20px auto;">Пройти заново</button></div>`;
+            return resultHtml;
+        },
+        on_load: () => {
+            // Добавляем обработчик после загрузки стимула
+            setTimeout(() => {
+                const btn = document.getElementById("restartBtn");
+                if (btn) btn.addEventListener("click", () => location.reload());
+            }, 100);
+        },
+        trial_duration: null,
+        choices: "NO_KEYS", // убираем необходимость нажимать клавишу
+        data: { phase: "results" }
+    };
+
+    timeline.push(showResults);
 
     // Запуск теста
     jsPsych.run(timeline);

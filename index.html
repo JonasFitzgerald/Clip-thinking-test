@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тест: Клиповое мышление у подростков</title>
-    <script src="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/dist/index.bundle.min.js"></script>
+    <!-- Подключаем jsPsych и плагины через CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/dist/jspsych.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/dist/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/dist/plugins/jspsych-survey-likert.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/dist/plugins/jspsych-survey-html-form.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/css/jspsych.css" rel="stylesheet">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
@@ -18,7 +22,7 @@
 <body>
 <div id="jspsych-target"></div>
 <script>
-    // ---- Вопросы для блоков ----
+    // ---- Данные для блоков ----
     const likertQuestions = [
         "Когда я читаю длинный текст (больше двух страниц), мне трудно сосредоточиться, я быстро отвлекаюсь.",
         "Я предпочитаю короткие видео (до 1 минуты) вместо фильмов или лекций.",
@@ -90,8 +94,7 @@
     // NRS блок А2
     let nrsHtml = '<h2>Блок А2. Оцени по шкале 0-10</h2>';
     for (let i = 0; i < nrsQuestions.length; i++) {
-        nrsHtml += `<div style="margin-bottom:20px;"><label><strong>${nrsQuestions[i]}</strong></label>
-
+        nrsHtml += `<div style="margin-bottom:20px;"><label><strong>${nrsQuestions[i]}</strong></label><br>
             <input type="range" name="nrs_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value">
             <output>5</output></div>`;
     }
@@ -123,10 +126,10 @@
     let pmHtml = '<h2>Блок Б. Влияние соцсетей</h2>';
     for (let i = 0; i < postmodernItems.length; i++) {
         pmHtml += `<h3>${postmodernItems[i].name}</h3>
-            <div><strong>${postmodernItems[i].textFreq}</strong>
-<input type="range" name="pm_freq_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value"><output>5</output></div>
-            <div><strong>${postmodernItems[i].textLike}</strong>
-<input type="range" name="pm_like_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value"><output>5</output></div>`;
+            <div><strong>${postmodernItems[i].textFreq}</strong><br>
+            <input type="range" name="pm_freq_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value"><output>5</output></div>
+            <div><strong>${postmodernItems[i].textLike}</strong><br>
+            <input type="range" name="pm_like_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value"><output>5</output></div>`;
     }
     timeline.push({
         type: 'survey-html-form',
@@ -138,8 +141,7 @@
     // Флажковый блок
     let flagHtml = '<h2>Блок В. Несколько вопросов о самочувствии</h2>';
     for (let i = 0; i < flagQuestions.length; i++) {
-        flagHtml += `<div style="margin-bottom:20px;"><strong>${flagQuestions[i]}</strong>
-
+        flagHtml += `<div style="margin-bottom:20px;"><strong>${flagQuestions[i]}</strong><br>
             <input type="range" name="flag_${i}" min="0" max="10" step="1" value="0" oninput="this.nextElementSibling.value=this.value">
             <output>0</output></div>`;
     }
@@ -227,6 +229,3 @@
 </script>
 </body>
 </html>
-
-
-

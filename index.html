@@ -20,6 +20,33 @@
             border-radius: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+        /* Шкала прогресса */
+        .progress-wrapper {
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .progress-text {
+            font-size: 0.9rem;
+            color: #2c4c7a;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .progress-bar-container {
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            height: 12px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            background-color: #4a6fa5;
+            height: 100%;
+            width: 0%;
+            border-radius: 20px;
+            transition: width 0.3s ease;
+        }
+        /* Кнопки и формы */
         .nav-buttons {
             display: flex;
             justify-content: center;
@@ -91,9 +118,8 @@
 <body>
 <div id="test-root" class="test-container"></div>
 
-<script src="https://unpkg.com/jspsych@7.3.4"></script>
 <script>
-    // ---------- Данные вопросов ----------
+    // ---------- Данные вопросов (те же) ----------
     const likertQuestions = [
         "Когда я читаю длинный текст (больше двух страниц), мне трудно сосредоточиться, я быстро отвлекаюсь.",
         "Я предпочитаю короткие видео (до 1 минуты) вместо фильмов или лекций.",
@@ -149,9 +175,9 @@
         { id: "flags", title: "Блок В", render: renderFlags }
     ];
     let currentPage = 0;
-    let answers = {};    // здесь хранятся все ответы
+    let answers = {};
 
-    // ---------- Функции рендеринга каждой страницы ----------
+    // ---------- Функции рендеринга страниц (без изменений, кроме CSS-классов) ----------
     function renderWelcome() {
         return `
             <div style="text-align:center;">
@@ -268,7 +294,7 @@
         return html;
     }
 
-    // ---------- Сохранение текущей страницы в answers ----------
+    // ---------- Сохранение данных текущей страницы ----------
     function saveCurrentPage() {
         const pageId = pages[currentPage].id;
         if (pageId === 'welcome') return true;
@@ -281,7 +307,6 @@
             return true;
         }
         if (pageId === 'likert') {
-            const radios = document.querySelectorAll('input[type="radio"]');
             let allChecked = true;
             for (let i = 0; i < likertQuestions.length; i++) {
                 const selected = document.querySelector(`input[name="likert_${i}"]:checked`);
@@ -334,15 +359,30 @@
         return true;
     }
 
-    // ---------- Переключение страниц ----------
+    // ---------- Рендер текущей страницы с прогрессом ----------
     function renderCurrentPage() {
         const container = document.getElementById('test-root');
         const page = pages[currentPage];
         const content = page.render();
+        const totalPages = pages.length;
+        const currentNumber = currentPage + 1;
+        const percent = (currentNumber / totalPages) * 100;
+
+        // Генерируем шкалу прогресса (полоса + текст)
+        const progressHtml = `
+            <div class="progress-wrapper">
+                <div class="progress-text">Страница ${currentNumber} из ${totalPages}</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: ${percent}%;"></div>
+                </div>
+            </div>
+        `;
+
         const prevDisabled = currentPage === 0 ? 'disabled' : '';
-        const nextLabel = currentPage === pages.length-1 ? 'Завершить тест' : 'Далее →';
+        const nextLabel = currentPage === totalPages-1 ? 'Завершить тест' : 'Далее →';
 
         container.innerHTML = `
+            ${progressHtml}
             ${content}
             <div class="nav-buttons">
                 <button id="prevBtn" ${prevDisabled}>← Назад</button>
@@ -350,6 +390,7 @@
             </div>
         `;
 
+        // Обработчики кнопок
         document.getElementById('prevBtn').addEventListener('click', () => {
             if (currentPage > 0) {
                 if (saveCurrentPage()) {
@@ -363,7 +404,7 @@
 
         document.getElementById('nextBtn').addEventListener('click', () => {
             if (saveCurrentPage()) {
-                if (currentPage === pages.length-1) {
+                if (currentPage === totalPages-1) {
                     showResults();
                 } else {
                     currentPage++;
@@ -375,7 +416,7 @@
         });
     }
 
-    // ---------- Расчёт результатов ----------
+    // ---------- Расчёт и вывод результатов ----------
     function showResults() {
         const likertResp = answers.likert ? Object.values(answers.likert).map(v => parseInt(v)) : [];
         const nrsResp = answers.nrs || {};
@@ -441,8 +482,8 @@
         document.getElementById('restartBtn').addEventListener('click', () => location.reload());
     }
 
-    // Запуск
+    // Запуск теста
     renderCurrentPage();
 </script>
 </body>
-    </html>
+</html>

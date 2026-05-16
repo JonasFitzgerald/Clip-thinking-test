@@ -3,39 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Тест: Клиповое мышление у подростков (с кнопкой "Назад")</title>
-    <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <title>Тест: Клиповое мышление у подростков</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .jspsych-content { max-width: 900px; margin: 0 auto; background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        button { background-color: #4a6fa5; border: none; color: white; padding: 12px 24px; font-size: 1rem; border-radius: 40px; cursor: pointer; margin: 0 10px; }
-        button:hover { background-color: #2c4c7a; }
-        .nav-buttons { display: flex; justify-content: center; margin-top: 20px; gap: 15px; }
-        .result-section { margin: 1rem 0; padding: 1rem; background: #e9ecef; border-radius: 12px; }
-        .alert { background: #fff3cd; border-left: 5px solid #ffc107; padding: 1rem; margin: 1rem 0; border-radius: 8px; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        button {
+            background-color: #4a6fa5;
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            font-size: 1rem;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #2c4c7a;
+        }
+        button:disabled {
+            background-color: #a0b8d0;
+            cursor: not-allowed;
+        }
+        .result-section {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #e9ecef;
+            border-radius: 12px;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+        .question-group {
+            margin-bottom: 20px;
+        }
+        .likert-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .likert-options label {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+        }
+        hr {
+            margin: 20px 0;
+        }
+        h2, h3 {
+            color: #1e3c5c;
+        }
+        input[type="range"] {
+            width: 100%;
+            max-width: 400px;
+        }
+        .error {
+            color: red;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
-<div id="jspsych-target"></div>
+<div id="test-root" class="test-container"></div>
 
 <script src="https://unpkg.com/jspsych@7.3.4"></script>
-<script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
-<script src="https://unpkg.com/@jspsych/plugin-survey-likert@1.1.3"></script>
-<script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.0.0"></script>
-
 <script>
-    // ----------------------------------------------------------------------
-    // 1. Инициализация и хранение ответов
-    // ----------------------------------------------------------------------
-    const jsPsych = initJsPsych();
-    let timeline = [];
-    
-    // Объект для временного хранения ответов между блоками
-    let savedResponses = {};
-
-    // ----------------------------------------------------------------------
-    // 2. Данные блоков (вопросы)
-    // ----------------------------------------------------------------------
+    // ---------- Данные вопросов ----------
     const likertQuestions = [
         "Когда я читаю длинный текст (больше двух страниц), мне трудно сосредоточиться, я быстро отвлекаюсь.",
         "Я предпочитаю короткие видео (до 1 минуты) вместо фильмов или лекций.",
@@ -80,265 +138,251 @@
         "Когда я злюсь, могу сказать или сделать то, о чём потом жалею (вспыльчивость). (0-10)"
     ];
 
-    // ----------------------------------------------------------------------
-    // 3. Вспомогательная функция для создания кастомной HTML-формы с двумя кнопками
-    // ----------------------------------------------------------------------
-    function makePage(id, htmlContent, saveHandler, loadHandler = null) {
-        return {
-            type: jsPsychSurveyHtmlForm,
-            html: htmlContent,
-            button_label: "Далее", // временная надпись, но мы полностью переопределим кнопки
-            data: { phase: id },
-            on_load: () => {
-                // Находим стандартную кнопку "Далее" и скрываем её
-                const container = document.querySelector('.jspsych-content');
-                const standardBtn = container.querySelector('button');
-                if (standardBtn) standardBtn.style.display = 'none';
+    // ---------- Состояние теста ----------
+    let pages = [
+        { id: "welcome", title: "Добро пожаловать", render: renderWelcome },
+        { id: "demographics", title: "О вас", render: renderDemographics },
+        { id: "likert", title: "Блок А1", render: renderLikert },
+        { id: "nrs", title: "Блок А2", render: renderNRS },
+        { id: "distribution", title: "Блок А3", render: renderDistribution },
+        { id: "postmodern", title: "Блок Б", render: renderPostmodern },
+        { id: "flags", title: "Блок В", render: renderFlags }
+    ];
+    let currentPage = 0;
+    let answers = {};    // здесь хранятся все ответы
 
-                // Удаляем старые кастомные кнопки, если были
-                const oldCustom = container.querySelector('.custom-nav');
-                if (oldCustom) oldCustom.remove();
+    // ---------- Функции рендеринга каждой страницы ----------
+    function renderWelcome() {
+        return `
+            <div style="text-align:center;">
+                <h2>Тест: Клиповое мышление у подростков</h2>
+                <p>Этот тест поможет понять, как ты воспринимаешь информацию.</p>
+                <p>Нет правильных или неправильных ответов — отвечай честно.</p>
+                <p>Используйте кнопки <strong>«Назад»</strong> и <strong>«Далее»</strong> для навигации.</p>
+            </div>
+        `;
+    }
 
-                // Добавляем нашу панель с кнопками
-                const navDiv = document.createElement('div');
-                navDiv.className = 'custom-nav nav-buttons';
+    function renderDemographics() {
+        let saved = answers.demographics || {};
+        return `
+            <h2>Несколько вопросов о вас</h2>
+            <div class="question-group">
+                <label>Возраст: <input type="number" id="age" min="14" max="19" value="${saved.age || ''}" required></label>
+            </div>
+            <div class="question-group">
+                <label>Как часто пользуешься интернетом?
+                    <select id="internet_freq" required>
+                        <option value="">Выберите...</option>
+                        <option ${saved.internet_freq === "Несколько раз в неделю" ? "selected" : ""}>Несколько раз в неделю</option>
+                        <option ${saved.internet_freq === "1-2 часа в день" ? "selected" : ""}>1-2 часа в день</option>
+                        <option ${saved.internet_freq === "3-5 часов в день" ? "selected" : ""}>3-5 часов в день</option>
+                        <option ${saved.internet_freq === "6-8 часов в день" ? "selected" : ""}>6-8 часов в день</option>
+                        <option ${saved.internet_freq === "Более 8 часов в день" ? "selected" : ""}>Более 8 часов в день</option>
+                    </select>
+                </label>
+            </div>
+        `;
+    }
 
-                // Кнопка "Назад" (кроме самой первой страницы)
-                if (id !== 'welcome') {
-                    const backBtn = document.createElement('button');
-                    backBtn.textContent = '← Назад';
-                    backBtn.type = 'button';
-                    backBtn.addEventListener('click', () => {
-                        // Сохраняем текущие ответы перед уходом
-                        const currentForm = container.querySelector('form');
-                        if (currentForm) {
-                            const formData = new FormData(currentForm);
-                            const response = {};
-                            for (let [key, value] of formData.entries()) {
-                                response[key] = value;
-                            }
-                            savedResponses[id] = response;
-                        }
-                        // Переход на предыдущую пробу
-                        const prevIndex = jsPsych.progress.current_trial_global - 1;
-                        jsPsych.data.get().trials[prevIndex].saved = true; // флаг, чтобы не зациклиться
-                        jsPsych.data.get().trials[prevIndex].response = savedResponses[prevId] || {};
-                        jsPsych.goTo(prevIndex);
-                    });
-                    navDiv.appendChild(backBtn);
-                }
+    function renderLikert() {
+        let saved = answers.likert || {};
+        let html = '<h2>Блок А1. Твой стиль мышления</h2><p>Оцени, насколько каждое утверждение похоже на тебя (1–5).</p>';
+        for (let i = 0; i < likertQuestions.length; i++) {
+            html += `<div class="question-group"><strong>${likertQuestions[i]}</strong><div class="likert-options">`;
+            for (let j = 0; j < likertLabels.length; j++) {
+                let val = j+1;
+                let checked = (saved[`likert_${i}`] == val) ? 'checked' : '';
+                html += `<label><input type="radio" name="likert_${i}" value="${val}" ${checked} required> ${likertLabels[j]}</label>`;
+            }
+            html += `</div></div>`;
+        }
+        return html;
+    }
 
-                // Кнопка "Далее"
-                const nextBtn = document.createElement('button');
-                nextBtn.textContent = 'Далее →';
-                nextBtn.type = 'button';
-                nextBtn.addEventListener('click', () => {
-                    const currentForm = container.querySelector('form');
-                    if (currentForm && currentForm.checkValidity()) {
-                        const formData = new FormData(currentForm);
-                        const response = {};
-                        for (let [key, value] of formData.entries()) {
-                            response[key] = value;
-                        }
-                        // Сохраняем ответы для этого блока
-                        savedResponses[id] = response;
-                        // Переходим к следующей пробе
-                        jsPsych.nextTrial();
-                    } else if (currentForm) {
-                        currentForm.reportValidity();
-                    }
-                });
-                navDiv.appendChild(nextBtn);
+    function renderNRS() {
+        let saved = answers.nrs || {};
+        let html = '<h2>Блок А2. Оцени по шкале 0-10</h2>';
+        for (let i = 0; i < nrsQuestions.length; i++) {
+            let val = saved[`nrs_${i}`] !== undefined ? saved[`nrs_${i}`] : 5;
+            html += `<div class="question-group">
+                        <label><strong>${nrsQuestions[i]}</strong></label><br>
+                        <input type="range" id="nrs_${i}" min="0" max="10" step="1" value="${val}" oninput="this.nextElementSibling.value=this.value">
+                        <output>${val}</output>
+                      </div>`;
+        }
+        return html;
+    }
 
-                container.appendChild(navDiv);
+    function renderDistribution() {
+        let saved = answers.distribution || {};
+        let clipVal = saved.clip !== undefined ? saved.clip : 50;
+        let holVal = saved.holistic !== undefined ? saved.holistic : 50;
+        return `
+            <h2>Блок А3. Распределение 100 баллов</h2>
+            <div class="question-group">
+                <label>На фрагментарное, быстрое, "клиповое": 
+                    <input type="number" id="clip" min="0" max="100" value="${clipVal}" required>
+                </label>
+            </div>
+            <div class="question-group">
+                <label>На последовательное, целостное: 
+                    <input type="number" id="holistic" min="0" max="100" value="${holVal}" required>
+                </label>
+            </div>
+            <p>Сумма должна быть 100.</p>
+            <div id="distr-error" class="error"></div>
+        `;
+    }
 
-                // Если есть сохранённые ответы для этого блока, подставляем их
-                if (savedResponses[id]) {
-                    const form = container.querySelector('form');
-                    if (form) {
-                        for (let [name, value] of Object.entries(savedResponses[id])) {
-                            const input = form.querySelector(`[name="${name}"]`);
-                            if (input) {
-                                if (input.type === 'range') {
-                                    input.value = value;
-                                    input.dispatchEvent(new Event('input'));
-                                } else {
-                                    input.value = value;
-                                }
-                            }
-                        }
-                    }
+    function renderPostmodern() {
+        let saved = answers.postmodern || {};
+        let html = '<h2>Блок Б. Влияние соцсетей</h2><p>Оцени частоту и насколько нравится (0-10)</p>';
+        for (let i = 0; i < postmodernItems.length; i++) {
+            let freqVal = saved[`pm_freq_${i}`] !== undefined ? saved[`pm_freq_${i}`] : 5;
+            let likeVal = saved[`pm_like_${i}`] !== undefined ? saved[`pm_like_${i}`] : 5;
+            html += `<h3>${postmodernItems[i].name}</h3>
+                <div class="question-group"><strong>${postmodernItems[i].textFreq}</strong><br>
+                    <input type="range" id="pm_freq_${i}" min="0" max="10" step="1" value="${freqVal}" oninput="this.nextElementSibling.value=this.value">
+                    <output>${freqVal}</output>
+                </div>
+                <div class="question-group"><strong>${postmodernItems[i].textLike}</strong><br>
+                    <input type="range" id="pm_like_${i}" min="0" max="10" step="1" value="${likeVal}" oninput="this.nextElementSibling.value=this.value">
+                    <output>${likeVal}</output>
+                </div>`;
+        }
+        return html;
+    }
+
+    function renderFlags() {
+        let saved = answers.flags || {};
+        let html = '<h2>Блок В. Несколько вопросов о самочувствии</h2><p>Оцени, насколько верно для тебя за последние недели (0-10)</p>';
+        for (let i = 0; i < flagQuestions.length; i++) {
+            let val = saved[`flag_${i}`] !== undefined ? saved[`flag_${i}`] : 0;
+            html += `<div class="question-group">
+                        <strong>${flagQuestions[i]}</strong><br>
+                        <input type="range" id="flag_${i}" min="0" max="10" step="1" value="${val}" oninput="this.nextElementSibling.value=this.value">
+                        <output>${val}</output>
+                    </div>`;
+        }
+        return html;
+    }
+
+    // ---------- Сохранение текущей страницы в answers ----------
+    function saveCurrentPage() {
+        const pageId = pages[currentPage].id;
+        if (pageId === 'welcome') return true;
+
+        if (pageId === 'demographics') {
+            const age = document.getElementById('age')?.value;
+            const freq = document.getElementById('internet_freq')?.value;
+            if (!age || !freq) return false;
+            answers.demographics = { age, internet_freq: freq };
+            return true;
+        }
+        if (pageId === 'likert') {
+            const radios = document.querySelectorAll('input[type="radio"]');
+            let allChecked = true;
+            for (let i = 0; i < likertQuestions.length; i++) {
+                const selected = document.querySelector(`input[name="likert_${i}"]:checked`);
+                if (!selected) { allChecked = false; break; }
+                answers.likert = answers.likert || {};
+                answers.likert[`likert_${i}`] = selected.value;
+            }
+            return allChecked;
+        }
+        if (pageId === 'nrs') {
+            let nrs = {};
+            for (let i = 0; i < nrsQuestions.length; i++) {
+                const el = document.getElementById(`nrs_${i}`);
+                if (el) nrs[`nrs_${i}`] = el.value;
+            }
+            answers.nrs = nrs;
+            return true;
+        }
+        if (pageId === 'distribution') {
+            const clip = document.getElementById('clip')?.value;
+            const hol = document.getElementById('holistic')?.value;
+            if (!clip || !hol) return false;
+            if (parseInt(clip) + parseInt(hol) !== 100) {
+                document.getElementById('distr-error').innerText = 'Сумма должна быть равна 100!';
+                return false;
+            }
+            answers.distribution = { clip, holistic: hol };
+            return true;
+        }
+        if (pageId === 'postmodern') {
+            let pm = {};
+            for (let i = 0; i < postmodernItems.length; i++) {
+                const freqEl = document.getElementById(`pm_freq_${i}`);
+                const likeEl = document.getElementById(`pm_like_${i}`);
+                if (freqEl) pm[`pm_freq_${i}`] = freqEl.value;
+                if (likeEl) pm[`pm_like_${i}`] = likeEl.value;
+            }
+            answers.postmodern = pm;
+            return true;
+        }
+        if (pageId === 'flags') {
+            let flags = {};
+            for (let i = 0; i < flagQuestions.length; i++) {
+                const el = document.getElementById(`flag_${i}`);
+                if (el) flags[`flag_${i}`] = el.value;
+            }
+            answers.flags = flags;
+            return true;
+        }
+        return true;
+    }
+
+    // ---------- Переключение страниц ----------
+    function renderCurrentPage() {
+        const container = document.getElementById('test-root');
+        const page = pages[currentPage];
+        const content = page.render();
+        const prevDisabled = currentPage === 0 ? 'disabled' : '';
+        const nextLabel = currentPage === pages.length-1 ? 'Завершить тест' : 'Далее →';
+
+        container.innerHTML = `
+            ${content}
+            <div class="nav-buttons">
+                <button id="prevBtn" ${prevDisabled}>← Назад</button>
+                <button id="nextBtn">${nextLabel}</button>
+            </div>
+        `;
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 0) {
+                if (saveCurrentPage()) {
+                    currentPage--;
+                    renderCurrentPage();
+                } else {
+                    alert('Пожалуйста, заполните все поля на текущей странице перед переходом назад.');
                 }
             }
-        };
-    }
+        });
 
-    // ----------------------------------------------------------------------
-    // 4. Построение страниц (каждая страница – отдельный блок)
-    // ----------------------------------------------------------------------
-    let pages = [];
-
-    // Страница 0: приветствие
-    pages.push({
-        id: 'welcome',
-        html: '<div style="text-align:center;"><h2>Тест: Клиповое мышление у подростков</h2><p>Этот тест поможет понять, как ты воспринимаешь информацию.</p><p>Нет правильных или неправильных ответов — отвечай честно.</p><p>Используйте кнопки "Назад" и "Далее" для навигации.</p></div>'
-    });
-
-    // Страница 1: демография (возраст, интернет-активность)
-    pages.push({
-        id: 'demographics',
-        html: '<h2>Несколько вопросов о вас</h2><div><label>Возраст: <input type="number" name="age" min="14" max="19" required></label></div><div><label>Как часто пользуешься интернетом? <select name="internet_freq" required><option value="">Выберите...</option><option>Несколько раз в неделю</option><option>1-2 часа в день</option><option>3-5 часов в день</option><option>6-8 часов в день</option><option>Более 8 часов в день</option></select></label></div>'
-    });
-
-    // Страница 2: Likert
-    let likertHtml = '<h2>Блок А1. Твой стиль мышления</h2><p>Оцени, насколько каждое утверждение похоже на тебя (1–5).</p>';
-    for (let i = 0; i < likertQuestions.length; i++) {
-        likertHtml += `<div style="margin-bottom:20px;"><strong>${likertQuestions[i]}</strong><br>`;
-        for (let j = 0; j < likertLabels.length; j++) {
-            likertHtml += `<label style="margin-right:15px;"><input type="radio" name="likert_${i}" value="${j+1}" required> ${likertLabels[j]}</label>`;
-        }
-        likertHtml += `</div>`;
-    }
-    pages.push({ id: 'likert', html: likertHtml });
-
-    // Страница 3: NRS (ползунки)
-    let nrsHtml = '<h2>Блок А2. Оцени по шкале 0-10</h2>';
-    for (let i = 0; i < nrsQuestions.length; i++) {
-        nrsHtml += `<div style="margin-bottom:20px;"><label><strong>${nrsQuestions[i]}</strong></label><br>
-            <input type="range" name="nrs_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value" required>
-            <output>5</output></div>`;
-    }
-    pages.push({ id: 'nrs', html: nrsHtml });
-
-    // Страница 4: распределение 100 баллов
-    pages.push({
-        id: 'distribution',
-        html: '<h2>Блок А3. Распределение 100 баллов</h2><div><label>На фрагментарное, быстрое, "клиповое": <input type="number" name="clip" min="0" max="100" value="50" required></label></div><div><label>На последовательное, целостное: <input type="number" name="holistic" min="0" max="100" value="50" required></label></div><p>Сумма должна быть 100.</p>'
-    });
-
-    // Страница 5: постмодернизм
-    let pmHtml = '<h2>Блок Б. Влияние соцсетей</h2>';
-    for (let i = 0; i < postmodernItems.length; i++) {
-        pmHtml += `<h3>${postmodernItems[i].name}</h3>
-            <div><strong>${postmodernItems[i].textFreq}</strong><br>
-            <input type="range" name="pm_freq_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value" required><output>5</output></div>
-            <div><strong>${postmodernItems[i].textLike}</strong><br>
-            <input type="range" name="pm_like_${i}" min="0" max="10" step="1" value="5" oninput="this.nextElementSibling.value=this.value" required><output>5</output></div>`;
-    }
-    pages.push({ id: 'postmodern', html: pmHtml });
-
-    // Страница 6: флажки
-    let flagHtml = '<h2>Блок В. Несколько вопросов о самочувствии</h2>';
-    for (let i = 0; i < flagQuestions.length; i++) {
-        flagHtml += `<div style="margin-bottom:20px;"><strong>${flagQuestions[i]}</strong><br>
-            <input type="range" name="flag_${i}" min="0" max="10" step="1" value="0" oninput="this.nextElementSibling.value=this.value" required>
-            <output>0</output></div>`;
-    }
-    pages.push({ id: 'flags', html: flagHtml });
-
-    // ----------------------------------------------------------------------
-    // 5. Добавляем страницы в timeline с кастомной навигацией
-    // ----------------------------------------------------------------------
-    for (let i = 0; i < pages.length; i++) {
-        const p = pages[i];
-        timeline.push({
-            type: jsPsychSurveyHtmlForm,
-            html: p.html,
-            button_label: "Далее", // заглушка, будет заменена
-            data: { phase: p.id },
-            on_load: () => {
-                const container = document.querySelector('.jspsych-content');
-                const standardBtn = container.querySelector('button');
-                if (standardBtn) standardBtn.style.display = 'none';
-
-                let oldCustom = container.querySelector('.custom-nav');
-                if (oldCustom) oldCustom.remove();
-
-                const navDiv = document.createElement('div');
-                navDiv.className = 'custom-nav nav-buttons';
-
-                // Кнопка "Назад" для всех, кроме первой
-                if (i !== 0) {
-                    const backBtn = document.createElement('button');
-                    backBtn.textContent = '← Назад';
-                    backBtn.type = 'button';
-                    backBtn.addEventListener('click', () => {
-                        // Сохраняем текущую форму
-                        const form = container.querySelector('form');
-                        if (form) {
-                            const formData = new FormData(form);
-                            const resp = {};
-                            for (let [key, val] of formData.entries()) resp[key] = val;
-                            savedResponses[p.id] = resp;
-                        }
-                        // Идём на предыдущую пробу
-                        jsPsych.goTo(jsPsych.progress.current_trial_global - 1);
-                    });
-                    navDiv.appendChild(backBtn);
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (saveCurrentPage()) {
+                if (currentPage === pages.length-1) {
+                    showResults();
+                } else {
+                    currentPage++;
+                    renderCurrentPage();
                 }
-
-                // Кнопка "Далее"
-                const nextBtn = document.createElement('button');
-                nextBtn.textContent = 'Далее →';
-                nextBtn.type = 'button';
-                nextBtn.addEventListener('click', () => {
-                    const form = container.querySelector('form');
-                    if (form && form.checkValidity()) {
-                        const formData = new FormData(form);
-                        const resp = {};
-                        for (let [key, val] of formData.entries()) resp[key] = val;
-                        savedResponses[p.id] = resp;
-                        // Если это последняя страница, переходим к результатам
-                        if (i === pages.length - 1) {
-                            // Вместо следующей пробы сразу показываем результаты
-                            showResultsPage();
-                        } else {
-                            jsPsych.nextTrial();
-                        }
-                    } else if (form) {
-                        form.reportValidity();
-                    }
-                });
-                navDiv.appendChild(nextBtn);
-
-                container.appendChild(navDiv);
-
-                // Восстанавливаем ранее сохранённые ответы
-                if (savedResponses[p.id]) {
-                    const form = container.querySelector('form');
-                    if (form) {
-                        for (let [name, value] of Object.entries(savedResponses[p.id])) {
-                            const input = form.querySelector(`[name="${name}"]`);
-                            if (input) {
-                                if (input.type === 'range') {
-                                    input.value = value;
-                                    input.dispatchEvent(new Event('input'));
-                                } else if (input.type === 'radio') {
-                                    const radio = form.querySelector(`[name="${name}"][value="${value}"]`);
-                                    if (radio) radio.checked = true;
-                                } else {
-                                    input.value = value;
-                                }
-                            }
-                        }
-                    }
-                }
+            } else {
+                alert('Пожалуйста, заполните все поля на этой странице.');
             }
         });
     }
 
-    // ----------------------------------------------------------------------
-    // 6. Функция отображения результатов (отдельная проба без навигации)
-    // ----------------------------------------------------------------------
-    function showResultsPage() {
-        // Собираем ответы из savedResponses
-        const likertResp = savedResponses['likert'] ? Object.values(savedResponses['likert']).map(v => parseInt(v)) : [];
-        const nrsResp = savedResponses['nrs'] || {};
-        const distResp = savedResponses['distribution'] || {};
-        const pmResp = savedResponses['postmodern'] || {};
-        const flagResp = savedResponses['flags'] || {};
+    // ---------- Расчёт результатов ----------
+    function showResults() {
+        const likertResp = answers.likert ? Object.values(answers.likert).map(v => parseInt(v)) : [];
+        const nrsResp = answers.nrs || {};
+        const distResp = answers.distribution || {};
+        const pmResp = answers.postmodern || {};
+        const flagResp = answers.flags || {};
 
-        // Расчёт ИКМ (полностью аналогичен предыдущему)
         let likertSum = 0, maxLikert = 12*5;
         if (likertResp.length === 12) {
             let rev = [...likertResp];
@@ -382,7 +426,7 @@
         else if (ikm <= 75) level = "Высокий (выраженное клиповое мышление)";
         else level = "Очень высокий";
 
-        let resultHtml = `<div><h2>Результаты теста</h2>
+        let resultHtml = `<div style="text-align:center;"><h2>Результаты теста</h2>
             <div class="result-section"><h3>Индекс клипового мышления: ${ikm.toFixed(1)} из 100</h3><p>Уровень: ${level}</p></div>
             <div class="result-section"><h3>Постмодернистские форматы (0-10)</h3>
             <ul><li><strong>Фрагментация:</strong> ${pmScores[0].toFixed(1)}</li><li><strong>Эклектизм:</strong> ${pmScores[1].toFixed(1)}</li><li><strong>Презентизм:</strong> ${pmScores[2].toFixed(1)}</li><li><strong>Интертекстуальность:</strong> ${pmScores[3].toFixed(1)}</li></ul></div>`;
@@ -391,14 +435,14 @@
         } else {
             resultHtml += `<div class="alert" style="background:#d4edda;border-left-color:#28a745;">По дополнительным вопросам не выявлено выраженных признаков клинических состояний.</div>`;
         }
-        resultHtml += `<button id="restartBtn" style="display:block; margin:20px auto;">Пройти заново</button></div>`;
+        resultHtml += `<button id="restartBtn" style="margin-top:30px;">Пройти заново</button></div>`;
 
-        document.getElementById('jspsych-target').innerHTML = resultHtml;
+        document.getElementById('test-root').innerHTML = resultHtml;
         document.getElementById('restartBtn').addEventListener('click', () => location.reload());
     }
 
-    // Запуск теста
-    jsPsych.run(timeline);
+    // Запуск
+    renderCurrentPage();
 </script>
 </body>
-</html>
+    </html>
